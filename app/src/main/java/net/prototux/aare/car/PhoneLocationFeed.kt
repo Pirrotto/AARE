@@ -7,9 +7,12 @@ import android.location.Criteria
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.Process
 import android.os.SystemClock
 import android.util.Log
+import net.prototux.aare.Settings
 
 /**
  * Feeds the car's GPS to the phone's own location providers while connected, so every app
@@ -17,8 +20,14 @@ import android.util.Log
  * which AARE gives car apps, with the phone's own fix, and the map jumps between the two.
  *
  * Android only allows it for the app chosen as "mock location app" in Developer options.
+ *
+ * In tunnels ([Settings.tunnelNavigation]) the position keeps moving: [TunnelEstimator] works it
+ * out from the car's speed, compass and gyroscope, once a second, until the GPS is back.
  */
 class PhoneLocationFeed(context: Context) {
+    private val settings = Settings(context)
+    private val tunnel = TunnelEstimator()
+    private var ticker: Handler? = null
     private val lm = context.getSystemService(LocationManager::class.java)
     private val providers = buildList {
         add(LocationManager.GPS_PROVIDER)
@@ -32,6 +41,16 @@ class PhoneLocationFeed(context: Context) {
     @Synchronized
     fun push(car: Location) {
         if (failed) return
+        if (settings.tunnelNavigation) {
+            startTicker()
+            val fix = TunnelEstimator.Fix(car.latitude, car.longitude, car.speed.takeIf { car.hasSpeed() },
+                car.bearing.takeIf { car.hasBearing() }, car.elapsedRealtimeNanos / 1_000_000)
+            if (tunnel.onFix(fix, sensors())) return
+        }
+        publish(car)
+    }
+
+    private fun publish(car: Location) {
         if (active.isEmpty()) start()
         for (p in active) {
             val l = Location(car).apply {
@@ -62,9 +81,51 @@ class PhoneLocationFeed(context: Context) {
 
     @Synchronized
     fun stop() {
+        ticker?.looper?.quitSafely()
+        ticker = null
+        tunnel.reset()
         for (p in active) runCatching { lm.removeTestProvider(p) }
         active.clear()
         failed = false
+    }
+
+    private fun startTicker() {
+        if (ticker != null) return
+        val thread = HandlerThread("aare-tunnel").apply { start() }
+        val handler = Handler(thread.looper)
+        ticker = handler
+        val tick = object : Runnable {
+            override fun run() {
+                runCatching { tick() }.onFailure { Log.w(TAG, "tunnel", it) }
+                if (ticker === handler) handler.postDelayed(this, 1000)
+            }
+        }
+        handler.post(tick)
+    }
+
+    @Synchronized
+    private fun tick() {
+        if (failed || !settings.tunnelNavigation || !CarData.state.value.connected) return
+        val wasEstimating = tunnel.estimating
+        val e = tunnel.tick(SystemClock.elapsedRealtime(), sensors()) ?: return
+        if (!wasEstimating) Log.i(TAG, "no GPS while moving: estimating from the last fix")
+        publish(Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = e.lat
+            longitude = e.lon
+            speed = e.speedMps
+            bearing = e.bearingDeg
+            accuracy = e.accuracyM
+        })
+    }
+
+    /** The car's speed (else the mean of its wheel speeds), compass and yaw rate, if sent in the last two seconds. */
+    private fun sensors(): TunnelEstimator.Sensors {
+        val s = CarData.state.value
+        val now = System.currentTimeMillis()
+        fun <T> CarData.Timed<T>?.fresh(): T? = this?.takeIf { now - it.atMillis <= 2_000 }?.value
+        val speed = s.speed.fresh()?.metersPerSecond?.let { kotlin.math.abs(it) }
+            ?: s.deadReckoning.fresh()?.wheelSpeedsMps?.takeIf { it.isNotEmpty() }?.let { kotlin.math.abs(it.average().toFloat()) }
+        return TunnelEstimator.Sensors(speed, s.compass.fresh()?.bearingDeg, s.gyroscope.fresh()?.z)
     }
 
     companion object {

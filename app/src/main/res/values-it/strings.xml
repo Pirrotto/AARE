@@ -58,6 +58,8 @@
     <string name="setup_section_location">Posizione</string>
     <string name="setup_toggle_car_gps_title">Usa il GPS dell\'auto</string>
     <string name="setup_toggle_car_gps_subtitle">Quando connesso, le app sul telefono vedono la posizione dell\'auto invece di quella del telefono, così le app di navigazione non confondono le due</string>
+    <string name="setup_toggle_tunnel_title">Continua in galleria</string>
+    <string name="setup_toggle_tunnel_subtitle">Senza GPS la posizione è stimata da velocità, bussola e giroscopio dell\'auto finché il segnale torna</string>
     <string name="setup_check_mock_location_title">Permetti ad AARE di impostare la posizione</string>
     <string name="setup_check_mock_location_subtitle">Opzioni sviluppatore &gt; Seleziona app posizione fittizia &gt; AARE</string>
     <string name="setup_section_video">Video</string>

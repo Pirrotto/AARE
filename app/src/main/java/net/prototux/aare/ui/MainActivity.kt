@@ -505,6 +505,7 @@ private fun ConnectionSettings(settings: Settings, refresh: Int) {
     var callsOnSpeaker by remember { mutableStateOf(settings.callsOnPhoneSpeaker) }
     var cars by remember { mutableStateOf(settings.knownCars) }
     var carGps by remember { mutableStateOf(settings.carGpsForPhone) }
+    var tunnel by remember { mutableStateOf(settings.tunnelNavigation) }
     var btAddr by remember { mutableStateOf(settings.phoneBluetoothAddress) }
     val ctx = LocalContext.current
     val pinned = remember { net.prototux.aare.PinnedHeadUnits(ctx) }
@@ -538,6 +539,9 @@ private fun ConnectionSettings(settings: Settings, refresh: Int) {
             }
             if (carGps) Check(stringResource(R.string.setup_check_mock_location_title), stringResource(R.string.setup_check_mock_location_subtitle), mockAllowed) {
                 ctx.startSafely(Intent(AndroidSettings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS), appDetails(ctx))
+            }
+            if (carGps) Toggle(stringResource(R.string.setup_toggle_tunnel_title), stringResource(R.string.setup_toggle_tunnel_subtitle), tunnel) {
+                tunnel = it; settings.tunnelNavigation = it
             }
         }
         Section(stringResource(R.string.setup_section_video)) {

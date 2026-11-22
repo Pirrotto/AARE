@@ -252,6 +252,11 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("car_gps", true)
         set(v) = prefs.edit { putBoolean("car_gps", v) }
 
+    /** With [carGpsForPhone]: in tunnels, the position keeps moving from the car's speed, compass and gyroscope. */
+    var tunnelNavigation: Boolean
+        get() = prefs.getBoolean("tunnel_navigation", true)
+        set(v) = prefs.edit { putBoolean("tunnel_navigation", v) }
+
     /** Start the last media app playing when the car connects. */
     var resumeMedia: Boolean
         get() = prefs.getBoolean("resume_media", false)
