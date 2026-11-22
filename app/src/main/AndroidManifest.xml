@@ -31,6 +31,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- "Allow all the time": when the projection starts in the background (the car's USB or
+         Bluetooth), Android 14+ grants the location foreground-service type only to apps holding
+         it (ProjectionService.goForeground()). Without it the navigation app loses GPS as soon as
+         the phone locks. Optional: the user grants it in the system settings. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <!-- Lists AARE under Developer options > Select mock location app: the car's GPS as the
          phone's location while connected (car/PhoneLocationFeed). -->
     <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION"

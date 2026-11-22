@@ -514,6 +514,9 @@ private fun ConnectionSettings(settings: Settings, refresh: Int) {
     // Read here, not in the Section's lambda, so coming back from Developer options re-checks it.
     @Suppress("UNUSED_EXPRESSION") refresh
     val mockAllowed = PhoneLocationFeed.allowed(ctx)
+    // Android 10+: only granted from the system settings (Android 11+ refuses to ask in a dialog).
+    val backgroundLocation = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+        ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Section(stringResource(R.string.setup_section_connecting)) {
             Toggle(stringResource(R.string.setup_toggle_wireless_title), stringResource(R.string.setup_toggle_wireless_subtitle), wireless) { wireless = it; settings.wireless = it; if (it) ProjectionService.probeWireless(ctx) }
@@ -533,6 +536,9 @@ private fun ConnectionSettings(settings: Settings, refresh: Int) {
             }
         }
         Section(stringResource(R.string.setup_section_location)) {
+            Check(stringResource(R.string.setup_check_background_location_title), stringResource(R.string.setup_check_background_location_subtitle), backgroundLocation) {
+                ctx.startSafely(appDetails(ctx))
+            }
             Toggle(stringResource(R.string.setup_toggle_car_gps_title), stringResource(R.string.setup_toggle_car_gps_subtitle), carGps) {
                 carGps = it; settings.carGpsForPhone = it
             }

@@ -60,6 +60,8 @@
     <string name="setup_toggle_car_gps_subtitle">Während der Verbindung sehen Apps auf dem Telefon die Position des Autos statt der eigenen, damit Navigations-Apps beide nicht vermischen</string>
     <string name="setup_check_mock_location_title">AARE erlauben, den Standort festzulegen</string>
     <string name="setup_check_mock_location_subtitle">Entwickleroptionen &gt; App für simulierten Standort auswählen &gt; AARE</string>
+    <string name="setup_check_background_location_title">Standortzugriff immer erlauben</string>
+    <string name="setup_check_background_location_subtitle">Damit Navigations-Apps bei gesperrtem Telefon das GPS behalten, wenn AARE vom Auto aus startet (Bluetooth oder USB): Berechtigungen &gt; Standort &gt; Immer zulassen</string>
     <string name="setup_section_video">Video</string>
     <string name="setup_toggle_60fps_title">60 fps bevorzugen</string>
     <string name="setup_toggle_60fps_subtitle">Flüssiger, wenn das Auto es unterstützt</string>
